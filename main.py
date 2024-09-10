@@ -6,8 +6,23 @@ from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup as bs
 import time
 
-driver = webdriver.Chrome()
+def extract_mobile_numbers(soup):
+    rows = soup.find('table', {"id": "dgBloodDonorResults"}).find_all('span')
+    mobile_numbers = [span.get_text() for span in rows if 'lblMobileNumber' in span.get('id', '')]
+    return mobile_numbers
 
+def go_to_next_page(driver, current_page):
+    try:
+        # Find the link for the next page and click it
+        next_page = driver.find_element(By.LINK_TEXT, str(current_page + 1))
+        next_page.click()
+        time.sleep(3)  # Allow time for the page to load
+        return True
+    except:
+        # No more pages available
+        return False
+
+driver = webdriver.Chrome()
 driver.get("https://www.friends2support.org/index.aspx")
 driver.implicitly_wait(10)
 
@@ -34,18 +49,27 @@ time.sleep(5)  # Wait for the city dropdown to populate
 btn = driver.find_element(By.ID, 'btnSearchDonor')
 btn.click()
 
+# Initialize list to store all mobile numbers
+all_mobile_numbers = []
 
-# Get the page source and parse it with BeautifulSoup
-html_content = driver.page_source
-soup = bs(html_content, "html.parser")
+# Start pagination from the first page
+current_page = 1
+while True:
+    # Get the page source and parse it with BeautifulSoup
+    html_content = driver.page_source
+    soup = bs(html_content, "html.parser")
+    
+    # Extract mobile numbers from the current page
+    mobile_numbers = extract_mobile_numbers(soup)
+    all_mobile_numbers.extend(mobile_numbers)
+    
+    # Try to go to the next page
+    if not go_to_next_page(driver, current_page):
+        break
+    
+    current_page += 1
 
-rows = soup.find('table' , { "id" : "dgBloodDonorResults" }).find_all('span')
-
-mobile_numbers = [span.get_text() for span in rows if 'lblMobileNumber' in span.get('id', '')]
-print(mobile_numbers)
-
-# for i in rows:
-    # print(i.get_text())
+# Print all extracted mobile numbers
+print(all_mobile_numbers)
 
 driver.quit()
-
