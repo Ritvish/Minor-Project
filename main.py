@@ -41,8 +41,11 @@ soup = bs(html_content, "html.parser")
 
 rows = soup.find('table' , { "id" : "dgBloodDonorResults" }).find_all('span')
 
-for i in rows:
-    print(i.get_text())
+mobile_numbers = [span.get_text() for span in rows if 'lblMobileNumber' in span.get('id', '')]
+print(mobile_numbers)
+
+# for i in rows:
+    # print(i.get_text())
 
 driver.quit()
 
