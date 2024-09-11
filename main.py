@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup as bs
 import time
+import csv
 
 def extract_mobile_numbers(soup):
     rows = soup.find('table', {"id": "dgBloodDonorResults"}).find_all('span')
@@ -70,6 +71,12 @@ while True:
     current_page += 1
 
 # Print all extracted mobile numbers
+
+with open('numbers.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    for number in all_mobile_numbers:
+        writer.writerow([number]) 
+
 print(all_mobile_numbers)
 
 driver.quit()
