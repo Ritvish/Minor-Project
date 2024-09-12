@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup as bs
 import time
 import csv
 
+BLOOD_GROUP = 'A2B+'
+STATE = 'Uttar Pradesh'
+
 def extract_mobile_numbers(soup):
     rows = soup.find('table', {"id": "dgBloodDonorResults"}).find_all('span')
     mobile_numbers = [span.get_text() for span in rows if 'lblMobileNumber' in span.get('id', '')]
@@ -41,7 +44,7 @@ driver.implicitly_wait(10)
 
 # Select Blood Group
 blood_group_dropdown = Select(driver.find_element(By.NAME, 'dpBloodGroup'))
-blood_group_dropdown.select_by_visible_text('A2B+')
+blood_group_dropdown.select_by_visible_text(BLOOD_GROUP)
 
 # Select Country
 country_dropdown = Select(driver.find_element(By.NAME, 'dpCountry'))
@@ -54,7 +57,7 @@ state_dropdown = WebDriverWait(driver, 20).until(
 
 # Select the state (Uttar Pradesh)
 state_select = Select(driver.find_element(By.ID, 'dpState'))
-state_select.select_by_visible_text('Uttar Pradesh')
+state_select.select_by_visible_text(STATE)
 
 time.sleep(5)  # Wait for the city dropdown to populate
 
@@ -88,7 +91,10 @@ while True:
     current_page += 1
 
 # Write all unique mobile numbers to a CSV file
-with open('numbers.csv', 'w', newline='') as csvfile:
+filename = "data/" + STATE + "_" + BLOOD_GROUP + ".csv"
+
+
+with open(filename, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     for number in all_mobile_numbers:
         writer.writerow([number]) 
