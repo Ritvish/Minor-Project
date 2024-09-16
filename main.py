@@ -7,8 +7,21 @@ from bs4 import BeautifulSoup as bs
 import time
 import csv
 
-BLOOD_GROUP = 'A2B+'
-STATE = 'Uttar Pradesh'
+# List of all blood groups (from the image)
+# BLOOD_GROUPS = [
+#     'A+', 'A-', 'A1+', 'A1-', 'A1B+', 'A1B-', 'A2+', 'A2-', 'A2B+', 'A2B-', 'AB+', 'AB-', 
+#     'B+', 'B-', 'Bombay Blood Group', 'INRA', 'O+', 'O-'
+# ]
+BLOOD_GROUPS = ['A+']
+
+# List of all states in India
+STATES = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 
+    'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 
+    'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 
+    'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 
+    'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+]
 
 def extract_mobile_numbers(soup):
     rows = soup.find('table', {"id": "dgBloodDonorResults"}).find_all('span')
@@ -37,68 +50,71 @@ def load_new_pages(driver):
         # No more pages available
         return False
 
-
+# Setup WebDriver
 driver = webdriver.Chrome()
 driver.get("https://www.friends2support.org/index.aspx")
 driver.implicitly_wait(10)
 
-# Select Blood Group
-blood_group_dropdown = Select(driver.find_element(By.NAME, 'dpBloodGroup'))
-blood_group_dropdown.select_by_visible_text(BLOOD_GROUP)
+# Loop over all blood groups and states
+for BLOOD_GROUP in BLOOD_GROUPS:
+    for STATE in STATES:
+        print(f"Processing Blood Group: {BLOOD_GROUP}, State: {STATE}")
 
-# Select Country
-country_dropdown = Select(driver.find_element(By.NAME, 'dpCountry'))
-country_dropdown.select_by_visible_text('INDIA')
+        # Select Blood Group
+        blood_group_dropdown = Select(driver.find_element(By.NAME, 'dpBloodGroup'))
+        blood_group_dropdown.select_by_visible_text(BLOOD_GROUP)
 
-# Wait for the state dropdown to be populated (up to 20 seconds)
-state_dropdown = WebDriverWait(driver, 20).until(
-    EC.presence_of_element_located((By.ID, "dpState"))
-)
+        # Select Country
+        country_dropdown = Select(driver.find_element(By.NAME, 'dpCountry'))
+        country_dropdown.select_by_visible_text('INDIA')
 
-# Select the state (Uttar Pradesh)
-state_select = Select(driver.find_element(By.ID, 'dpState'))
-state_select.select_by_visible_text(STATE)
+        # Wait for the state dropdown to be populated (up to 20 seconds)
+        state_dropdown = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.ID, "dpState"))
+        )
 
-time.sleep(5)  # Wait for the city dropdown to populate
+        # Select the state
+        state_select = Select(driver.find_element(By.ID, 'dpState'))
+        state_select.select_by_visible_text(STATE)
 
-# Click the Search Donor button
-btn = driver.find_element(By.ID, 'btnSearchDonor')
-btn.click()
+        time.sleep(5)  # Wait for the city dropdown to populate
 
-# Initialize a set to store unique mobile numbers
-all_mobile_numbers = set()
+        # Click the Search Donor button
+        btn = driver.find_element(By.ID, 'btnSearchDonor')
+        btn.click()
 
-# Start pagination from the first page
-current_page = 1
-pageload = False
-while True:
-    # Get the page source and parse it with BeautifulSoup
-    html_content = driver.page_source
-    soup = bs(html_content, "html.parser")
-    
-    # Extract mobile numbers from the current page
-    mobile_numbers = extract_mobile_numbers(soup)
-    all_mobile_numbers.update(mobile_numbers)  # Add to the set
-    
-    # Try to go to the next page
-    if not go_to_next_page(driver, current_page):
-        if not pageload:
-            load_new_pages(driver)  # Click the "..." link to load more pages
-            pageload = True
-        else: 
-            break
-    
-    current_page += 1
+        # Initialize a set to store unique mobile numbers
+        all_mobile_numbers = set()
 
-# Write all unique mobile numbers to a CSV file
-filename = "data/" + STATE + "_" + BLOOD_GROUP + ".csv"
+        # Start pagination from the first page
+        current_page = 1
+        pageload = False
+        while True:
+            # Get the page source and parse it with BeautifulSoup
+            html_content = driver.page_source
+            soup = bs(html_content, "html.parser")
 
+            # Extract mobile numbers from the current page
+            mobile_numbers = extract_mobile_numbers(soup)
+            all_mobile_numbers.update(mobile_numbers)  # Add to the set
 
-with open(filename, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    for number in all_mobile_numbers:
-        writer.writerow([number]) 
+            # Try to go to the next page
+            if not go_to_next_page(driver, current_page):
+                if not pageload:
+                    load_new_pages(driver)  # Click the "..." link to load more pages
+                    pageload = True
+                else: 
+                    break
 
-print(all_mobile_numbers)
+            current_page += 1
+
+        # Write all unique mobile numbers to a CSV file
+        filename = "data/" + STATE + "_" + BLOOD_GROUP + ".csv"
+        with open(filename, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            for number in all_mobile_numbers:
+                writer.writerow([number]) 
+
+        print(f"Completed Blood Group: {BLOOD_GROUP}, State: {STATE}")
 
 driver.quit()
