@@ -7,26 +7,41 @@ from bs4 import BeautifulSoup as bs
 import time
 import csv
 
-# List of all blood groups (from the image)
-# BLOOD_GROUPS = [
-#     'A+', 'A-', 'A1+', 'A1-', 'A1B+', 'A1B-', 'A2+', 'A2-', 'A2B+', 'A2B-', 'AB+', 'AB-', 
-#     'B+', 'B-', 'Bombay Blood Group', 'INRA', 'O+', 'O-'
-# ]
-BLOOD_GROUPS = ['A+']
+#BLOOD_GROUPS = [
+# #     'A+', 'A-', 'A1+', 'A1-', 'A1B+', 'A1B-', 'A2+', 'A2-', 'A2B+', 'A2B-', 'AB+', 'AB-', 
+# #     'B+', 'B-', 'Bombay Blood Group', 'INRA', 'O+', 'O-'
+# # ]
+
+BLOOD_GROUPS = ['A1B+']
 
 # List of all states in India
-STATES = [
-    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 
-    'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 
-    'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 
-    'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 
-    'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
-]
+# STATES = [
+#     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 
+#     'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 
+#     'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 
+#     'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 
+#     'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+# ]
+STATES = ['Kerala']
 
-def extract_mobile_numbers(soup):
-    rows = soup.find('table', {"id": "dgBloodDonorResults"}).find_all('span')
-    mobile_numbers = [span.get_text() for span in rows if 'lblMobileNumber' in span.get('id', '')]
-    return mobile_numbers
+def extract_names_and_mobile_numbers(soup):
+    # Find rows in the table with donor details
+    rows = soup.find('table', {"id": "dgBloodDonorResults"}).find_all('tr')[1:]  # Skip header row
+    name_number_pairs = []
+    
+    for row in rows:
+        # Extract name with error handling
+        name_span = row.find('span', id=lambda x: x and 'lblFullName' in x)
+        name = name_span.get_text(strip=True) if name_span else 'N/A'  # Use 'N/A' if not found
+        
+        # Extract mobile number with error handling
+        mobile_span = row.find('span', id=lambda x: x and 'lblMobileNumber' in x)
+        mobile = mobile_span.get_text(strip=True) if mobile_span else 'N/A'  # Use 'N/A' if not found
+        
+        name_number_pairs.append((name, mobile))
+    
+    return name_number_pairs
+
 
 def go_to_next_page(driver, current_page):
     try:
@@ -83,8 +98,8 @@ for BLOOD_GROUP in BLOOD_GROUPS:
         btn = driver.find_element(By.ID, 'btnSearchDonor')
         btn.click()
 
-        # Initialize a set to store unique mobile numbers
-        all_mobile_numbers = set()
+        # Initialize a set to store unique name-number pairs
+        all_name_number_pairs = set()
 
         # Start pagination from the first page
         current_page = 1
@@ -94,9 +109,9 @@ for BLOOD_GROUP in BLOOD_GROUPS:
             html_content = driver.page_source
             soup = bs(html_content, "html.parser")
 
-            # Extract mobile numbers from the current page
-            mobile_numbers = extract_mobile_numbers(soup)
-            all_mobile_numbers.update(mobile_numbers)  # Add to the set
+            # Extract name-number pairs from the current page
+            name_number_pairs = extract_names_and_mobile_numbers(soup)
+            all_name_number_pairs.update(name_number_pairs)  # Add to the set
 
             # Try to go to the next page
             if not go_to_next_page(driver, current_page):
@@ -108,12 +123,13 @@ for BLOOD_GROUP in BLOOD_GROUPS:
 
             current_page += 1
 
-        # Write all unique mobile numbers to a CSV file
+        # Write all unique name-number pairs to a CSV file
         filename = "data/" + STATE + "_" + BLOOD_GROUP + ".csv"
         with open(filename, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            for number in all_mobile_numbers:
-                writer.writerow([number]) 
+            writer.writerow(["Name", "Mobile Number"])  # Add headers
+            for name, number in all_name_number_pairs:
+                writer.writerow([name, number])
 
         print(f"Completed Blood Group: {BLOOD_GROUP}, State: {STATE}")
 
