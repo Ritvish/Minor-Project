@@ -13,7 +13,7 @@ pg.FAILSAFE = False
 core.check_connection()
 
 
-phonenum = ["+918178125671","+919540240000","+919717103354"]
+phonenum = ["+91817xxxx","+919xxxxx0","+91xxxxxx"]
 
 
 def sendwhatmsg_instantly(
