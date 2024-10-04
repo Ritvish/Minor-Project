@@ -13,7 +13,7 @@ pg.FAILSAFE = False
 core.check_connection()
 
 
-phonenum = ["+91817xxxx","+919xxxxx0","+91xxxxxx"]
+phonenum = ["+919540240000"]
 
 
 def sendwhatmsg_instantly(
@@ -37,15 +37,34 @@ def sendwhatmsg_instantly(
     if tab_close:
         core.close_tab(wait_time=close_time)
 
-for i in phonenum:
-    sendwhatmsg_instantly(i,"hi")
+# for i in phonenum:
+#     sendwhatmsg_instantly(i,"hi")
 
-def open_web() -> bool:
-    """Opens WhatsApp Web"""
+# def open_web() -> bool:
+#     """Opens WhatsApp Web"""
 
-    try:
-        web.open("https://web.whatsapp.com",new=2)
-    except web.Error:
-        return False
-    else:
-        return True
+#     try:
+#         web.open("https://web.whatsapp.com",new=2)
+#     except web.Error:
+#         return False
+#     else:
+#         return True
+
+
+def read_last_message(contact_name: str) -> Optional[str]:
+    """Read the last message received from a specific contact"""
+    time.sleep(5)  # Wait for WhatsApp Web to load
+    
+    web.open(f"https://web.whatsapp.com/send?phone={phonenum[0]}")
+    pg.click(core.WIDTH / 2, core.HEIGHT / 2)  # Click on the chat
+    time.sleep(1)
+    
+    # Grab the last message
+    messages = list(pg.locateAllOnScreen('path/to/message_element.png'))  # Convert generator to list
+    if messages:
+        last_message = messages[-1]  # Get the last message
+        return last_message
+    return None
+
+last_message = read_last_message("Ritvishh")  # Replace with the desired number
+print("Last message received:", last_message)
