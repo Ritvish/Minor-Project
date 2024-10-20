@@ -7,4 +7,4 @@ Having accurate and up-to-date information makes a significant difference in con
 Thank you for your support and for being a part of our community!
 
 Best regards,
-[Your Organization Name]
+Friends2Support
