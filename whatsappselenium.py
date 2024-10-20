@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 options = webdriver.ChromeOptions()
-options.add_argument(r"--user-data-dir=C:\Users\arngu\AppData\Local\Google\Chrome\User Data")  
+options.add_argument(r"--user-data-dir=C:\Users\LENOVO\AppData\Local\Google\Chrome\User Data")  
 # options.add_argument(r'--profile-directory=Person 1')
 driver = webdriver.Chrome(options=options)
 time.sleep(15)
