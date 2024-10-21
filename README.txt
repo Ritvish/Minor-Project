@@ -8,3 +8,4 @@ Thank you for your support and for being a part of our community!
 
 Best regards,
 Friends2Support
+Thanks
